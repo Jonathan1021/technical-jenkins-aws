@@ -61,9 +61,6 @@ pipeline {
                     USER_INPUT = input message: "Do you approve the execution of the following query?\n\n${env.QUERY}", 
                                         ok: "Execute",
                                         submitterParameter: 'userSubmitter'
-                    sh """
-                    echo USER_INPUT: ${USER_INPUT}
-                    """
                 }
             }
         }
@@ -72,7 +69,6 @@ pipeline {
             steps {
                 script {
                     sh """
-                    echo USER_INPUT: ${USER_INPUT}
                     echo Executing... ${QUERY}
                     """
                 }
