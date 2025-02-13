@@ -12,6 +12,7 @@ pipeline {
 
     environment {
         USER_INPUT = null
+        QUERY = null
     }
 
     options {
@@ -20,7 +21,16 @@ pipeline {
     }
 
     stages {
-        stage('Execute Query PartiQL') {
+        stage('Configuration') {
+            steps {
+                script {
+                    deleteDir()
+                    USER_INPUT = [Programmed: false, Schedule: '', Comment: '', userSubmitter: '']
+                }
+            }
+        }
+
+        stage('Approvers') {
             when {
                 expression {
                     return params.Stage == "prod" || params.Stage == "nonprod" || params.Stage == "uat"
@@ -37,12 +47,12 @@ pipeline {
                     def tableName = params.TableName
 
                     // Build the PartiQL query
-                    def partiqlQuery = "${action} ${attributes} FROM ${tableName} ${conditional};"
+                    QUERY = "${action} ${attributes} FROM ${tableName} ${conditional};"
 
                     // Show the generated PartiQL query
-                    echo "Generated PartiQL query: ${partiqlQuery}"
+                    echo "Generated PartiQL query: ${env.QUERY}"
 
-                    USER_INPUT = input message: "Do you approve the execution of the following query?\n\n${partiqlQuery}", 
+                    USER_INPUT = input message: "Do you approve the execution of the following query?\n\n${env.QUERY}", 
                                         ok: "Execute",
                                         submitterParameter: 'userSubmitter'
                     sh """
@@ -50,6 +60,17 @@ pipeline {
                     echo Executing...
                     """
                 }
+            }
+        }
+    }
+
+    stage('Execute Query PartiQL') {
+        steps {
+            script {
+                sh """
+                echo USER_INPUT: ${USER_INPUT}
+                echo Executing... ${QUERY}
+                """
             }
         }
     }
