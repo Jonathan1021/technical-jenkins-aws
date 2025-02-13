@@ -45,7 +45,7 @@ pipeline {
                     QUERY = "${action} ${attributes} FROM ${tableName} ${conditional};"
 
                     // Show the generated PartiQL query
-                    echo "Generated PartiQL query: ${env.QUERY}"
+                    echo "Generated PartiQL query: ${QUERY}"
                 }
             }
         }
@@ -58,7 +58,7 @@ pipeline {
             }
             steps {
                 script {
-                    USER_INPUT = input message: "Do you approve the execution of the following query?\n\n${env.QUERY}", 
+                    USER_INPUT = input message: "Do you approve the execution of the following query?\n\n${QUERY}", 
                                         ok: "Execute",
                                         submitterParameter: 'userSubmitter'
                 }
