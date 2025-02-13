@@ -76,21 +76,21 @@ pipeline {
         }
     }
 
-    // post {
-    //     always {
-    //         cleanWs()
-    //     }
-    //     success {
-    //         script {
-    //             notificationSuccess()
-    //         }
-    //     }
-    //     failure {
-    //         script {
-    //             notificationError()
-    //         }
-    //     }    
-    // }
+    post {
+        always {
+            cleanWs()
+        }
+        // success {
+        //     script {
+        //         notificationSuccess()
+        //     }
+        // }
+        // failure {
+        //     script {
+        //         notificationError()
+        //     }
+        // }    
+    }
 }
 
 def notificationSuccess() {
