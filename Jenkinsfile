@@ -42,7 +42,7 @@ pipeline {
                     def tableName = params.TableName
 
                     // Build the PartiQL query
-                    QUERY = "${action} ${attributes} FROM ${tableName} ${conditional};"
+                    QUERY = "${action} ${attributes} FROM ${tableName} WHERE ${conditional};"
 
                     // Show the generated PartiQL query
                     echo "Generated PartiQL query: ${QUERY}"
