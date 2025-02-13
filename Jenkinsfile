@@ -30,12 +30,7 @@ pipeline {
             }
         }
 
-        stage('Approvers') {
-            when {
-                expression {
-                    return params.Stage == "prod" || params.Stage == "nonprod" || params.Stage == "uat"
-                }
-            }
+        stage('Set Query') {
             steps {
                 script {
                     // Build the dynamic PartiQL query using the parameters
@@ -51,13 +46,23 @@ pipeline {
 
                     // Show the generated PartiQL query
                     echo "Generated PartiQL query: ${env.QUERY}"
+                }
+            }
+        }
 
+        stage('Approvers') {
+            when {
+                expression {
+                    return params.Stage == "prod" || params.Stage == "nonprod" || params.Stage == "uat"
+                }
+            }
+            steps {
+                script {
                     USER_INPUT = input message: "Do you approve the execution of the following query?\n\n${env.QUERY}", 
                                         ok: "Execute",
                                         submitterParameter: 'userSubmitter'
                     sh """
                     echo USER_INPUT: ${USER_INPUT}
-                    echo Executing...
                     """
                 }
             }
