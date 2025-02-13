@@ -7,7 +7,7 @@ pipeline {
         choice(name: 'Action', choices: ['SELECT'], description: 'Select the action to execute. Ex: SELECT')
         string(name: 'Attributes', defaultValue: '*', description: 'Select attributes to display. (*) for all attributes, if you want to specify placing the attributes separated by (,). Example: id, name')
         string(name: 'TableName', defaultValue: '', description: 'Write the Table Name. Example: MyTable')
-        string(name: 'Conditional', defaultValue: 'WHERE ', description: 'Write condition. Example: WHERE id = 1;')
+        string(name: 'Conditional', defaultValue: '', description: 'Write condition. Example: id = 1;')
     }
 
     environment {
