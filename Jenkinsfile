@@ -62,15 +62,15 @@ pipeline {
                 }
             }
         }
-    }
 
-    stage('Execute Query PartiQL') {
-        steps {
-            script {
-                sh """
-                echo USER_INPUT: ${USER_INPUT}
-                echo Executing... ${QUERY}
-                """
+        stage('Execute Query PartiQL') {
+            steps {
+                script {
+                    sh """
+                    echo USER_INPUT: ${USER_INPUT}
+                    echo Executing... ${QUERY}
+                    """
+                }
             }
         }
     }
