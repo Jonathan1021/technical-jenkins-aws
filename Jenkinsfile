@@ -28,7 +28,7 @@ pipeline {
             }
             steps {
                 script {
-                                        // Build the dynamic PartiQL query using the parameters
+                    // Build the dynamic PartiQL query using the parameters
                     def action = params.Action
                     def attributes = params.Attributes
                     def conditional = params.Conditional
@@ -54,21 +54,21 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            cleanWs()
-        }
-        success {
-            script {
-                // notificationSuccess()
-            }
-        }
-        failure {
-            script {
-                // notificationError()
-            }
-        }    
-    }
+    // post {
+    //     always {
+    //         cleanWs()
+    //     }
+    //     success {
+    //         script {
+    //             notificationSuccess()
+    //         }
+    //     }
+    //     failure {
+    //         script {
+    //             notificationError()
+    //         }
+    //     }    
+    // }
 }
 
 def notificationSuccess() {
