@@ -3,8 +3,8 @@ pipeline {
 
     parameters {
         string(name: 'Email', defaultValue: '', description: 'Email. Ex: example@hdiexample.com.co')
-        choice(name: 'Stage', choices: ['dev', 'nonprod', 'uat', 'prod'], description: 'Stage or Enviroment to Excute. Ex: dev'),
-        choice(name: 'Action', choices: ['SELECT'], description: 'Select the action to execute. Ex: SELECT'),
+        choice(name: 'Stage', choices: ['dev', 'nonprod', 'uat', 'prod'], description: 'Stage or Enviroment to Excute. Ex: dev')
+        choice(name: 'Action', choices: ['SELECT'], description: 'Select the action to execute. Ex: SELECT')
         string(name: 'Attributes', defaultValue: '*', description: 'Select attributes to display. (*) for all attributes, if you want to specify placing the attributes separated by (,). Example: id, name')
         string(name: 'TableName', defaultValue: '', description: 'Write the Table Name. Example: MyTable')
         string(name: 'Conditional', defaultValue: 'WHERE ', description: 'Write condition. Example: WHERE id = 1;')
