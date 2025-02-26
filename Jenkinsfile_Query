@@ -1,25 +1,36 @@
-pipeline {
-    agent any
+@Library('utils@master') _
+import com.lmig.intl.cloud.jenkins.util.EnvConfigUtil
 
+def envUtil = new EnvConfigUtil()
+countryParams = envUtil.getCountryEnvDetails(env.JOB_NAME)
+
+pipeline {
+    agent {
+        label 'linux'
+    }
+ 
     parameters {
         string(name: 'Email', defaultValue: '', description: 'Email. Ex: example@hdiexample.com.co')
-        choice(name: 'Stage', choices: ['dev', 'nonprod', 'uat', 'prod'], description: 'Stage or Enviroment to Excute. Ex: dev')
+        // choice(name: 'Stage', choices: ['dev', 'nonprod', 'uat', 'prod'], description: 'Stage or Enviroment to Excute. Ex: dev')
         choice(name: 'Action', choices: ['SELECT'], description: 'Select the action to execute. Ex: SELECT')
         string(name: 'Attributes', defaultValue: '*', description: 'Select attributes to display. (*) for all attributes, if you want to specify placing the attributes separated by (,). Example: id, name')
         string(name: 'TableName', defaultValue: '', description: 'Write the Table Name. Example: MyTable')
         string(name: 'Conditional', defaultValue: '', description: 'Write condition. Example: id = 1')
     }
-
+ 
     environment {
         USER_INPUT = null
         QUERY = null
+        APP_ENV = countryParams.countryEnv.toLowerCase()
+        RESULT = null
     }
-
+ 
     options {
         timestamps()
         timeout(time: 1, unit: 'HOURS')
+        buildDiscarder(logRotator(numToKeepStr: '1', daysToKeepStr: '1'))
     }
-
+ 
     stages {
         stage('Configuration') {
             steps {
@@ -29,7 +40,7 @@ pipeline {
                 }
             }
         }
-
+ 
         stage('Set Query') {
             steps {
                 script {
@@ -37,23 +48,22 @@ pipeline {
                     def action = params.Action
                     def attributes = params.Attributes
                     def conditional = params.Conditional
-                    
                     // Define the table name (you can adjust this or make it a parameter if needed)
                     def tableName = params.TableName
-
+ 
                     // Build the PartiQL query
-                    QUERY = "${action} ${attributes} FROM ${tableName} WHERE ${conditional};"
-
+                    QUERY = "${action} ${attributes} FROM \"${tableName}\" WHERE ${conditional}"
+ 
                     // Show the generated PartiQL query
                     echo "Generated PartiQL query: ${QUERY}"
                 }
             }
         }
-
+ 
         stage('Approvers') {
             when {
                 expression {
-                    return params.Stage == "prod" || params.Stage == "nonprod" || params.Stage == "uat"
+                    return APP_ENV == "prod" || APP_ENV == "nonprod" || APP_ENV == "uat"
                 }
             }
             steps {
@@ -64,63 +74,69 @@ pipeline {
                 }
             }
         }
-
-        stage('Execute Query PartiQL') {
+        
+        stage('Dev - Execute Query PartiQL') {
+            when {
+                expression {
+                    return APP_ENV == "dev"
+                }
+            }
             steps {
                 script {
-                    sh """
-                    echo Executing... ${QUERY}
-                    """
+                    deployToDev {   
+                        RESULT = sh(script: "aws dynamodb execute-statement --statement '${QUERY}' --region us-east-1", returnStdout: true).trim()
+                    }
                 }
             }
         }
+        
+        stage('Nonprod - Execute Query PartiQL') {
+            when {
+                expression {
+                    return APP_ENV == "nonprod"
+                }
+            }
+            steps {
+                script {
+                    deployToNonProd {   
+                        RESULT = sh("aws dynamodb execute-statement --statement ${QUERY} --output json --region us-east-1", returnStdout: true).trim()
+                    }
+                }
+            }
+        }
+        
+        stage('Prod - Execute Query PartiQL') {
+            when {
+                expression {
+                    return APP_ENV == "prod"
+                }
+            }
+            steps {
+                script {
+                    deployToProd {   
+                        RESULT = sh("aws dynamodb execute-statement --statement ${QUERY} --output json --region us-east-1", returnStdout: true).trim()
+                    }
+                }
+            }
+        }
+        
+                
+        stage('Summary') {
+            steps {
+                script {
+                    echo "Query: ${QUERY}"
+                    echo "Result: ${RESULT}"
+                }
+            }
+        }
+        
+        
+        
     }
-
+ 
     post {
         always {
             cleanWs()
-        }
-        // success {
-        //     script {
-        //         notificationSuccess()
-        //     }
-        // }
-        // failure {
-        //     script {
-        //         notificationError()
-        //     }
-        // }    
+        }   
     }
-}
-
-def notificationSuccess() {
-    def subject = "${Email}"
-    def bodyText = ""
-    subject = "[${params.Stage}] - Released Success in ${env.JOB_NAME} - ${params.ArtifactoryId}"
-    bodyText = """
-    Hi there!!
-
-    Deployment successful! Artifactory ID: ${params.ArtifactoryId} to the ${params.Stage} environment.
-
-    See job here: ${env.BUILD_URL}
-
-    See log here: ${env.BUILD_URL}consoleText
-    """
-    echo "Sending email with subject '${Email}' and content:\n${bodyText}"
-}
-
-def notificationError() {
-    def subject = "${Email}"
-    def bodyText = ""
-    subject = "[${params.Stage}] - Released Error in ${env.JOB_NAME} - ${params.ArtifactoryId}"
-    bodyText = """
-    Hi there!!
-
-    Deployment successful! Artifactory ID: ${params.ArtifactoryId} to the ${params.Stage} environment. 
-
-    See job here: ${env.BUILD_URL}
-
-    See log here: ${env.BUILD_URL}consoleText
-    """
-    echo "Sending email with subject '${Email}' and content:\n${bodyText}"
 }
